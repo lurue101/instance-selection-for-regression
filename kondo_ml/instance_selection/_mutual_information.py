@@ -1,22 +1,41 @@
-from mutual_info.mutual_info import mutual_information
-
 # from sklearn.feature_selection import mutual_info_regression
 import numpy as np
-
+from mutual_info.mutual_info import mutual_information
 from sklearn.base import BaseEstimator
 from sklearn.neighbors import NearestNeighbors
 
-from prism_kondo.instance_selection.base import SelectorMixin
-from prism_kondo.utils import normalize_array
+from kondo_ml.instance_selection.base import SelectorMixin
+from kondo_ml.utils import normalize_array
 
 
 class MutualInformationSelector(SelectorMixin, BaseEstimator):
+    """
+    Instance Selection bas on the concept of Mutual Information from Information Theory.
+    The algorithm is presented in the paper #TODO
+    """
+
     def __init__(self, alpha=0.05, nr_of_neighbors=6, subsize_frac=1):
         super().__init__(subsize_frac)
         self.k = nr_of_neighbors
         self.alpha = alpha
 
     def fit(self, X, y):
+        """
+        Fit the algorithm according to the given training data.
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            Training vector, where `n_samples` is the number of samples and
+            `n_features` is the number of features.
+        y : Ignored
+            Not used, present for API consistency by convention.
+
+        Returns
+        -------
+        self
+            Fitted estimator.
+        """
         self.nr_of_samples = X.shape[0]
         self.labels = np.ones(self.nr_of_samples, dtype="int8") * -1
         self.scores = np.zeros(self.nr_of_samples, dtype="float32")

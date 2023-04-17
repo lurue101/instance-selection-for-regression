@@ -1,18 +1,20 @@
 import numpy as np
 import pandas as pd
-
 from sklearn.base import BaseEstimator
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import euclidean_distances, mean_squared_error
 from sklearn.model_selection import cross_validate
 
-from prism_kondo.model import train_lr_model
-
-from ..utils import normalize_array
-from .base import SelectorMixin
+from kondo_ml.instance_selection.base import SelectorMixin
+from kondo_ml.utils import normalize_array, train_lr_model
 
 
 class Fish1Selector(SelectorMixin, BaseEstimator):
+    """FISH1 instance selection algorithm from the paper Combining Similarity in Time and Space for
+    Training Set Formation under Concept Drift by Zliobaite
+    https://eprints.bournemouth.ac.uk/18567/1/FISH_journal_preprint.pdf
+    """
+
     def __init__(
         self,
         temporal_weight=0.5,
@@ -23,12 +25,14 @@ class Fish1Selector(SelectorMixin, BaseEstimator):
         self.spatial_weight = 1 - temporal_weight
 
     def calc_time_space_dist(self, X_spatial) -> np.array:
-        """
-        Calculates the combined distance for each instance in X_spatial and the target instance
+        """Returns weighted combined spatial and temporal distance for each sample in X
+
         Parameters
         ----------
-        X_spatial
-            n_samples x features, without a time vector
+        X_spatial: {array-like, sparse matrix} of shape (n_samples, n_features)
+            Training vector, where `n_samples` is the number of samples and
+            `n_features` is the number of features.
+
         Returns
         -------
         array of combined temporal and spatial distance
@@ -43,10 +47,29 @@ class Fish1Selector(SelectorMixin, BaseEstimator):
         return self.spatial_weight * d_space.flatten() + self.temporal_weight * d_time
 
     def check_valid_weights(self):
+        """Raises a ValueError if the temporal weight is below zero or above one"""
         if self.temporal_weight > 1 or self.temporal_weight < 0:
             raise ValueError("invalid weight")
 
     def fit(self, X, y=None):
+        """Fit the algorithm according to the given training data
+
+        The time vector needs to be passed as the last column in the X array. And the reference sample needs to be
+        the last row in X
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            Training vector, where `n_samples` is the number of samples and
+            `n_features` is the number of features.
+        y : Ignored
+            Not used, present for API consistency by convention.
+
+        Returns
+        -------
+        self
+            Fitted estimator.
+        """
         self.X_temporal = pd.to_datetime(X[:-1, -1]).to_numpy()
         self.x_target = X[-1, :-1]
         self.x_target_temporal = pd.to_datetime(X[-1, -1]).to_numpy()
@@ -59,6 +82,19 @@ class Fish1Selector(SelectorMixin, BaseEstimator):
         return self
 
     def predict(self, X, y=None):
+        """Predict the labels (1 use for training, -1 rejected) of X that was passed to the fit function
+
+         Parameters
+         ----------
+        X: Ignored
+             Not used, present for API consistency by convention.
+         y: Ignored
+             Not used, present for API consistency by convention.
+
+         Returns
+         -------
+
+        """
         idx_to_pick = np.argsort(self.distance_vector, axis=0).flatten()[
             : self.samples_to_pick
         ]  # pick smallest dist

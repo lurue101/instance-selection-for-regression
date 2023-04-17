@@ -1,11 +1,10 @@
 import numpy as np
-
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import train_test_split
 
-from prism_kondo.instance_selection.base import SelectorMixin
-from prism_kondo.SELCON.datasets import get_data
-from prism_kondo.SELCON.linear import Regression
+from kondo_ml.instance_selection.base import SelectorMixin
+from kondo_ml.instance_selection.SELCON.datasets import get_data
+from kondo_ml.instance_selection.SELCON.linear import Regression
 
 
 class SelconSelector(SelectorMixin, BaseEstimator):

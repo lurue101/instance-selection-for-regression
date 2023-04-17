@@ -1,13 +1,11 @@
 import numpy as np
 import pandas as pd
 from scipy.special import softmax
-
 from sklearn.base import BaseEstimator
 from sklearn.neighbors import NearestNeighbors
 
-from ..model import train_lr_model
-from ..utils import weighted_avg_and_std
-from .base import SelectorMixin
+from kondo_ml.instance_selection.base import SelectorMixin
+from kondo_ml.utils import train_lr_model, weighted_avg_and_std
 
 
 class RegEnnSelector(SelectorMixin, BaseEstimator):
@@ -17,6 +15,22 @@ class RegEnnSelector(SelectorMixin, BaseEstimator):
         self.alpha = alpha
 
     def fit(self, X, y):
+        """
+        Fit the algorithm according to the given training data.
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            Training vector, where `n_samples` is the number of samples and
+            `n_features` is the number of features.
+        y : Ignored
+            Not used, present for API consistency by convention.
+
+        Returns
+        -------
+        self
+            Fitted estimator.
+        """
         self.nr_of_samples = X.shape[0]
         self.labels = np.ones(self.nr_of_samples, dtype="int8") * -1
         self.scores = np.ones(self.nr_of_samples, dtype="float32")
@@ -29,6 +43,23 @@ class RegEnnSelector(SelectorMixin, BaseEstimator):
         i,
         subset_mask,
     ):
+        """
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            Training vector, where `n_samples` is the number of samples and
+            `n_features` is the number of features.
+        y : array-like of shape (n_samples)
+            True target values for X
+        i : int
+            Index of the instance to exclude
+        subset_mask
+
+        Returns
+        -------
+
+        """
         investigated_instance = X[i, :].reshape(1, -1)
         mask_model_training = subset_mask.copy()
         mask_model_training[
@@ -48,6 +79,21 @@ class RegEnnSelector(SelectorMixin, BaseEstimator):
         return indices
 
     def predict(self, X, y):
+        """Predict the labels (1 use for training, -1 rejected) of X according to RegENN
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            Training vector, where `n_samples` is the number of samples and
+            `n_features` is the number of features.
+        y : array-like of shape (n_samples,)
+            Target vector relative to X.
+
+        Returns
+        -------
+        labels: ndarray of shape (n_samples,)
+            Returns +1 for samples that should be used for model training, -1 for those rejected
+        """
         subset_mask = np.ones(self.nr_of_samples, dtype="bool")
         for i in range(self.nr_of_samples):
             (
@@ -71,6 +117,13 @@ class RegEnnSelector(SelectorMixin, BaseEstimator):
 
 
 class RegENNSelectorTime(RegEnnSelector):
+    """RegENNTime is an adaption of RegENN, presented by the author of this package.
+
+    RegENNTime makes use of a time vector by calculating weights according to the distance of each instance
+    to the last (newest) instance in the set. These weights are used to calculate a weighted
+    standard deviation which is the basis for the threshold theta and the selection criterion.
+    """
+
     def __init__(
         self,
         alpha=5,
@@ -86,14 +139,14 @@ class RegENNSelectorTime(RegEnnSelector):
     def fit(self, X, y):
         """
         Gets the time information from the input variable. It is important that that the time feature is the last column
-        for the array X
+        of the X array.
 
         Parameters
         ----------
         X
             Input array with (n_samples x n_features), where the last column contains the time of each instance
         y
-            Ground-truth target values for X
+            True target values for X
         Returns
         -------
 
@@ -123,10 +176,12 @@ class RegENNSelectorTime(RegEnnSelector):
         return weights.flatten()
 
     def predict(self, X, y):
-        """
-        Predicts if a instance should be included in the training set or not. As the time vector is included in the fit
-        method as the last column of input array X, it is also expected here and the last column therefore removed from
-        the calculations
+        """Predict the labels (1 use for training, -1 rejected) of X according to RegENNTime
+
+
+        As the time vector is included in the fit method as the last column of input array X,
+        it is also expected here and the last column therefore removed from
+        the calculations.
 
         Parameters
         ----------
@@ -137,8 +192,8 @@ class RegENNSelectorTime(RegEnnSelector):
 
         Returns
         -------
-            integer array indicating if a instance should be included in train set.
-            1 if it should be included, -1 if not
+        labels: ndarray of shape (n_samples,)
+            Returns +1 for samples that should be used for model training, -1 for those rejected
         """
         X_without_time = X[:, :-1].copy()
         subset_mask = np.ones(self.nr_of_samples, dtype="bool")

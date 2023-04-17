@@ -1,10 +1,9 @@
 import numpy as np
-
 from sklearn.base import BaseEstimator
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import r2_score
 
-from ..model import get_lr_model_random_params
-from .base import SelectorMixin
+from kondo_ml.instance_selection.base import SelectorMixin
+from kondo_ml.utils import get_lr_model_random_params
 
 
 class GradientShapleySelector(SelectorMixin, BaseEstimator):

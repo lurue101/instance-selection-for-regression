@@ -1,9 +1,8 @@
 import numpy as np
-
 from sklearn.base import BaseEstimator
 from sklearn.neighbors import LocalOutlierFactor
 
-from prism_kondo.instance_selection.base import SelectorMixin
+from kondo_ml.instance_selection.base import SelectorMixin
 
 
 class LOFSelector(SelectorMixin, BaseEstimator):

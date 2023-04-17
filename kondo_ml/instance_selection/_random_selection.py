@@ -1,9 +1,7 @@
 import numpy as np
-
 from sklearn.base import BaseEstimator
-from sklearn.utils import check_random_state
 
-from .base import SelectorMixin
+from kondo_ml.instance_selection.base import SelectorMixin
 
 
 class RandomSelector(SelectorMixin, BaseEstimator):

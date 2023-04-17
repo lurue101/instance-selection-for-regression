@@ -1,19 +1,20 @@
 import copy
 import time
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
-import numpy as np
-
-from prism_kondo.SELCON.model.LinearRegression import RegressionNet
-from prism_kondo.SELCON.model.SELCON import (
-    FindSubset_Vect_No_ValLoss as FindSubset_Vect,
-)
-from prism_kondo.SELCON.model.SELCON import FindSubset_Vect_TrnLoss
-from prism_kondo.SELCON.utils.custom_dataset import CustomDataset
+from kondo_ml.instance_selection.SELCON.model.LinearRegression import \
+    RegressionNet
+from kondo_ml.instance_selection.SELCON.model.SELCON import \
+    FindSubset_Vect_No_ValLoss as FindSubset_Vect
+from kondo_ml.instance_selection.SELCON.model.SELCON import \
+    FindSubset_Vect_TrnLoss
+from kondo_ml.instance_selection.SELCON.utils.custom_dataset import \
+    CustomDataset
 
 torch.manual_seed(42)
 np.random.seed(42)
@@ -56,7 +57,6 @@ class Regression:
         default=False,
         ebud=None,
     ):
-
         sub_epoch = 3
 
         N, M = x_trn.shape
@@ -162,11 +162,9 @@ class Regression:
         lr_count = 0
 
         for i in range(num_epochs):
-
             temp_loss = 0.0
 
             for batch_idx in list(loader_tr.batch_sampler):
-
                 inputs, targets = loader_tr.dataset[batch_idx]
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
                 main_optimizer.zero_grad()
@@ -208,7 +206,6 @@ class Regression:
                 # print(main_optimizer.param_groups[0]['lr'])
 
             if (i + 1) % self.select_every == 0:
-
                 cached_state_dict = copy.deepcopy(main_model.state_dict())
                 clone_dict = copy.deepcopy(cached_state_dict)
 
@@ -319,10 +316,8 @@ class Regression:
         )
 
         with torch.no_grad():
-
             # self.val_loss = 0.
             for batch_idx in list(loader_val.batch_sampler):
-
                 inputs, targets = loader_val.dataset[batch_idx]
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
 
@@ -343,7 +338,6 @@ class Regression:
             # print(list(e_val_loss.cpu().numpy()))
 
             if default == True:
-
                 loader_tst = DataLoader(
                     CustomDataset(x_tst, y_tst, transform=None),
                     shuffle=False,
@@ -351,7 +345,6 @@ class Regression:
                 )
 
                 for batch_idx in list(loader_tst.batch_sampler):
-
                     inputs, targets = loader_tst.dataset[batch_idx]
                     inputs, targets = inputs.to(self.device), targets.to(self.device)
 
@@ -388,7 +381,6 @@ class Regression:
         default=False,
         bud=None,
     ):
-
         sub_epoch = 3
 
         N, M = x_trn.shape
@@ -520,7 +512,6 @@ class Regression:
         lr_count = 0
         # while (True):
         for i in range(num_epochs):
-
             # inputs, targets = x_trn[idxs].to(self.device), y_trn[idxs].to(self.device)
             # inputs, targets = x_trn[sub_idxs], y_trn[sub_idxs]
 
@@ -529,7 +520,6 @@ class Regression:
             starting = time.process_time()
 
             for batch_idx_t in list(loader_tr.batch_sampler):
-
                 inputs_trn, targets_trn = loader_tr.dataset[batch_idx_t]
                 inputs_trn, targets_trn = inputs_trn.to(self.device), targets_trn.to(
                     self.device
@@ -563,7 +553,6 @@ class Regression:
 
                 constraint = 0.0
                 for batch_idx in list(loader_val.batch_sampler):
-
                     inputs, targets = loader_val.dataset[batch_idx]
                     inputs, targets = inputs.to(self.device), targets.to(self.device)
 
@@ -607,7 +596,6 @@ class Regression:
                 # if constraint > 0:
                 constraint = 0.0
                 for batch_idx in list(loader_val.batch_sampler):
-
                     inputs, targets = loader_val.dataset[batch_idx]
                     inputs, targets = inputs.to(self.device), targets.to(self.device)
 
@@ -662,7 +650,6 @@ class Regression:
                 # print(main_optimizer.param_groups)#[0]['lr'])
 
             if (i + 1) % self.select_every == 0:
-
                 cached_state_dict = copy.deepcopy(main_model.state_dict())
                 clone_dict = copy.deepcopy(cached_state_dict)
 
@@ -816,11 +803,11 @@ class Regression:
             full_trn_loss = criterion(full_trn_out, y_trn)
             sub_trn_out = main_model(x_trn[idxs])
             sub_trn_loss = criterion(sub_trn_out, y_trn[idxs])
-            print("\nFinal SubsetTrn and FullTrn Loss:", sub_trn_loss.item(),full_trn_loss.item(),file=logfile)"""
+            print("\nFinal SubsetTrn and FullTrn Loss:", sub_trn_loss.item(),full_trn_loss.item(),file=logfile)
+            """
 
             # val_loss = 0.
             for batch_idx in list(loader_val.batch_sampler):
-
                 inputs, targets = loader_val.dataset[batch_idx]
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
 
@@ -842,7 +829,6 @@ class Regression:
 
             if default == True:
                 for batch_idx in list(loader_tst.batch_sampler):
-
                     inputs, targets = loader_tst.dataset[batch_idx]
                     inputs, targets = inputs.to(self.device), targets.to(self.device)
 

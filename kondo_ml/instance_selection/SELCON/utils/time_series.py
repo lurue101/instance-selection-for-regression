@@ -1,22 +1,12 @@
 import os
 
-import torch
-import torchvision
-from matplotlib import pyplot as plt
-from torch.utils.data import Dataset
-from torchvision import transforms
-
 import numpy as np
 import pandas as pd
-
-from sklearn import datasets, preprocessing
-from sklearn.datasets import make_classification
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler, OrdinalEncoder, StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 
 
 def process_time_series(datadir, past_length, col_name, name, save_data=True):
-
     x_trn = []
     y_trn = []
 
@@ -34,7 +24,6 @@ def process_time_series(datadir, past_length, col_name, name, save_data=True):
     symbol = pd.DataFrame(prices_split_adjusted["symbol"].value_counts())
 
     for sym in symbol.index:
-
         stock = prices_split_adjusted[prices_split_adjusted["symbol"] == sym]
 
         data_len = len(stock.index)
@@ -67,13 +56,11 @@ def process_time_series(datadir, past_length, col_name, name, save_data=True):
 
 
 def load_time_series_data(datadir, dset_name, past_length, clean=True):
-
     if os.path.isfile(
         os.path.join(datadir, dset_name + "_" + str(past_length) + ".data.npy")
     ) and os.path.isfile(
         os.path.join(datadir, dset_name + "_" + str(past_length) + ".label.npy")
     ):
-
         x_trn = np.load(
             os.path.join(datadir, dset_name + "_" + str(past_length) + ".data.npy")
         )
@@ -82,7 +69,6 @@ def load_time_series_data(datadir, dset_name, past_length, clean=True):
         )
 
     else:
-
         if dset_name == "NY_Stock_exchange_close":
             x_trn, y_trn = process_time_series(datadir, past_length, "close", dset_name)
 
@@ -105,7 +91,6 @@ def load_time_series_data(datadir, dset_name, past_length, clean=True):
     )
 
     if not clean:
-
         noise_size = int(len(y_trn) * 0.5)
         noise_indices = np.random.choice(
             np.arange(len(y_trn)), size=noise_size, replace=False

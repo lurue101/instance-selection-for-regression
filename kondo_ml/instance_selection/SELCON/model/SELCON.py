@@ -1,18 +1,17 @@
 import math
 
+import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
-import numpy as np
-
-from prism_kondo.SELCON.utils.custom_dataset import CustomDataset, CustomDataset_WithId
+from kondo_ml.instance_selection.SELCON.utils.custom_dataset import (
+    CustomDataset, CustomDataset_WithId)
 
 
 class FindSubset_Vect_No_ValLoss(object):
     def __init__(
         self, x_trn, y_trn, x_val, y_val, model, loss, device, delta, lr, lam, batch
     ):
-
         self.x_trn = x_trn
         self.y_trn = y_trn
         # self.trn_batch = trn_batch
@@ -66,7 +65,6 @@ class FindSubset_Vect_No_ValLoss(object):
         i = 0
 
         while True:
-
             main_optimizer.zero_grad()
 
             """l2_reg = 0
@@ -79,7 +77,6 @@ class FindSubset_Vect_No_ValLoss(object):
 
             constraint = 0.0
             for batch_idx in list(loader_val.batch_sampler):
-
                 inputs, targets = loader_val.dataset[batch_idx]
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
 
@@ -105,7 +102,6 @@ class FindSubset_Vect_No_ValLoss(object):
 
             constraint = 0.0
             for batch_idx in list(loader_val.batch_sampler):
-
                 inputs, targets = loader_val.dataset[batch_idx]
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
 
@@ -194,7 +190,6 @@ class FindSubset_Vect_No_ValLoss(object):
         )
 
         for batch_idx in list(loader_tr.batch_sampler):
-
             inputs, targets, idxs = loader_tr.dataset[batch_idx]
             inputs, targets = inputs.to(self.device), targets.to(self.device)
 
@@ -219,7 +214,6 @@ class FindSubset_Vect_No_ValLoss(object):
             bias_correction2 = 1.0
 
             for i in range(p_epoch):
-
                 trn_loss_g = torch.sum(exten_inp * weights, dim=1) - targets
                 fin_trn_loss_g = exten_inp * 2 * trn_loss_g[:, None]
 
@@ -250,7 +244,6 @@ class FindSubset_Vect_No_ValLoss(object):
 
             val_losses = 0.0
             for batch_idx_val in list(loader_val.batch_sampler):
-
                 inputs_val, targets_val = loader_val.dataset[batch_idx_val]
                 inputs_val, targets_val = inputs_val.to(self.device), targets_val.to(
                     self.device
@@ -308,7 +301,6 @@ class FindSubset_Vect_No_ValLoss(object):
         a_exp_avg,
         a_exp_avg_sq,
     ):
-
         m_values = self.F_values.detach().clone()  # torch.zeros(len(self.x_trn))
 
         self.model.load_state_dict(theta_init)
@@ -330,11 +322,9 @@ class FindSubset_Vect_No_ValLoss(object):
         sum_error = torch.nn.MSELoss(reduction="sum")
 
         with torch.no_grad():
-
             F_curr = 0.0
 
             for batch_idx in list(loader_tr.batch_sampler):
-
                 inputs, targets, _ = loader_tr.dataset[batch_idx]
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
 
@@ -352,7 +342,6 @@ class FindSubset_Vect_No_ValLoss(object):
 
             valloss = 0.0
             for batch_idx in list(loader_val.batch_sampler):
-
                 inputs, targets = loader_val.dataset[batch_idx]
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
 
@@ -397,7 +386,6 @@ class FindSubset_Vect_No_ValLoss(object):
         device_new = self.device  # "cuda:2" #self.device #
 
         for batch_idx in list(loader_tr.batch_sampler):
-
             inputs, targets, _ = loader_tr.dataset[batch_idx]
             inputs, targets = inputs.to(self.device), targets.to(self.device)
 
@@ -429,11 +417,9 @@ class FindSubset_Vect_No_ValLoss(object):
             bias_correction2 = beta2**step  # 1.0
 
             for i in range(p_epoch):
-
                 fin_val_loss_g = torch.zeros_like(weights).to(device_new)
                 # val_losses = torch.zeros_like(ele_delta).to(device_new)
                 for batch_idx_val in list(loader_val.batch_sampler):
-
                     inputs_val, targets_val = loader_val.dataset[batch_idx_val]
                     inputs_val, targets_val = inputs_val.to(
                         self.device
@@ -487,7 +473,6 @@ class FindSubset_Vect_No_ValLoss(object):
 
                 sum_fin_trn_loss_g = torch.zeros_like(weights).to(device_new)
                 for batch_idx_trn in list(loader_tr.batch_sampler):
-
                     inputs_trn, targets_trn, _ = loader_tr.dataset[batch_idx_trn]
                     inputs_trn, targets_trn = inputs_trn.to(
                         self.device
@@ -579,7 +564,6 @@ class FindSubset_Vect_No_ValLoss(object):
 
                 val_losses = torch.zeros_like(ele_delta).to(device_new)
                 for batch_idx_val in list(loader_val.batch_sampler):
-
                     inputs_val, targets_val = loader_val.dataset[batch_idx_val]
                     inputs_val, targets_val = inputs_val.to(
                         self.device
@@ -629,7 +613,6 @@ class FindSubset_Vect_No_ValLoss(object):
 
             val_losses = 0.0
             for batch_idx_val in list(loader_val.batch_sampler):
-
                 inputs_val, targets_val = loader_val.dataset[batch_idx_val]
                 inputs_val, targets_val = inputs_val.to(self.device), targets_val.to(
                     self.device
@@ -655,7 +638,6 @@ class FindSubset_Vect_No_ValLoss(object):
 
             trn_losses = 0.0
             for batch_idx_trn in list(loader_tr.batch_sampler):
-
                 inputs_trn, targets_trn, _ = loader_tr.dataset[batch_idx_trn]
                 inputs_trn, targets_trn = inputs_trn.to(self.device), targets_trn.to(
                     self.device
@@ -711,7 +693,6 @@ class FindSubset_Vect_TrnLoss(object):
     def __init__(
         self, x_trn, y_trn, x_val, y_val, model, loss, device, delta, lr, lam, batch
     ):
-
         self.x_trn = x_trn
         self.y_trn = y_trn
         # self.trn_batch = trn_batch
@@ -734,7 +715,6 @@ class FindSubset_Vect_TrnLoss(object):
         np.random.seed(42)
 
     def precompute(self, f_pi_epoch, p_epoch, alphas):
-
         main_optimizer = torch.optim.Adam(
             [{"params": self.model.parameters()}], lr=self.lr
         )
@@ -764,7 +744,6 @@ class FindSubset_Vect_TrnLoss(object):
         i = 0
 
         while True:
-
             main_optimizer.zero_grad()
 
             """l2_reg = 0
@@ -777,7 +756,6 @@ class FindSubset_Vect_TrnLoss(object):
 
             constraint = 0.0
             for batch_idx in list(loader_val.batch_sampler):
-
                 inputs, targets = loader_val.dataset[batch_idx]
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
 
@@ -803,7 +781,6 @@ class FindSubset_Vect_TrnLoss(object):
 
             constraint = 0.0
             for batch_idx in list(loader_val.batch_sampler):
-
                 inputs, targets = loader_val.dataset[batch_idx]
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
 
@@ -875,7 +852,6 @@ class FindSubset_Vect_TrnLoss(object):
         )
 
         for batch_idx in list(loader_tr.batch_sampler):
-
             inputs, targets, idxs = loader_tr.dataset[batch_idx]
             inputs, targets = inputs.to(self.device), targets.to(self.device)
 
@@ -900,7 +876,6 @@ class FindSubset_Vect_TrnLoss(object):
             bias_correction2 = 1.0
 
             for i in range(p_epoch):
-
                 trn_loss_g = torch.sum(exten_inp * weights, dim=1) - targets
                 fin_trn_loss_g = exten_inp * 2 * trn_loss_g[:, None]
 
@@ -931,7 +906,6 @@ class FindSubset_Vect_TrnLoss(object):
 
             val_losses = 0.0
             for batch_idx_val in list(loader_val.batch_sampler):
-
                 inputs_val, targets_val = loader_val.dataset[batch_idx_val]
                 inputs_val, targets_val = inputs_val.to(self.device), targets_val.to(
                     self.device
@@ -994,7 +968,6 @@ class FindSubset_Vect_TrnLoss(object):
         w_exp_avg,
         w_exp_avg_sq,
     ):  # ,alphas,a_exp_avg,a_exp_avg_sq):
-
         m_values = self.F_values.detach().clone()  # torch.zeros(len(self.x_trn))
 
         self.model.load_state_dict(theta_init)
@@ -1021,11 +994,9 @@ class FindSubset_Vect_TrnLoss(object):
         sum_error = torch.nn.MSELoss(reduction="sum")
 
         with torch.no_grad():
-
             F_curr = 0.0
 
             for batch_idx in list(loader_tr.batch_sampler):
-
                 inputs, targets, _ = loader_tr.dataset[batch_idx]
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
 
@@ -1078,7 +1049,6 @@ class FindSubset_Vect_TrnLoss(object):
         device_new = self.device  # "cuda:2" #self.device #
 
         for batch_idx in list(loader_tr.batch_sampler):
-
             inputs, targets, _ = loader_tr.dataset[batch_idx]
             inputs, targets = inputs.to(self.device), targets.to(self.device)
 
@@ -1106,10 +1076,8 @@ class FindSubset_Vect_TrnLoss(object):
             bias_correction2 = beta2**step  # 1.0
 
             for i in range(p_epoch):
-
                 sum_fin_trn_loss_g = torch.zeros_like(weights).to(device_new)
                 for batch_idx_trn in list(loader_tr.batch_sampler):
-
                     inputs_trn, targets_trn, _ = loader_tr.dataset[batch_idx_trn]
                     inputs_trn, targets_trn = inputs_trn.to(
                         self.device
@@ -1191,7 +1159,6 @@ class FindSubset_Vect_TrnLoss(object):
 
             trn_losses = 0.0
             for batch_idx_trn in list(loader_tr.batch_sampler):
-
                 inputs_trn, targets_trn, _ = loader_tr.dataset[batch_idx_trn]
                 inputs_trn, targets_trn = inputs_trn.to(self.device), targets_trn.to(
                     self.device

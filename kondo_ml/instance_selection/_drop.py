@@ -1,18 +1,18 @@
 import numpy as np
-
 from sklearn.base import BaseEstimator
 from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import NearestNeighbors
 
-from ..model import train_lr_model
-from ..utils import transform_selector_output_into_mask
-from ._reg_ENN import RegEnnSelector
-from .base import SelectorMixin
+from kondo_ml.instance_selection import RegEnnSelector
+from kondo_ml.instance_selection.base import SelectorMixin
+from kondo_ml.utils import train_lr_model, transform_selector_output_into_mask
 
 
-class DROPSuperClass(BaseEstimator, SelectorMixin):
+class DROPRESuperClass(BaseEstimator, SelectorMixin):
     """
-    Class that contain the basic function that DROP variants 2/3 - RE/RT share
+    Class that contain the basic function that DROP variants 2/3 - RE/RT share.
+    The algorithm can be found in the paper by Arnaiz-Gonzalez et al.
+    https://www.sciencedirect.com/science/article/abs/pii/S0925231216301953
     """
 
     def __init__(self, nr_of_neighbors: int = 5, subsize_frac=1):
@@ -20,12 +20,29 @@ class DROPSuperClass(BaseEstimator, SelectorMixin):
         self.k = nr_of_neighbors
 
     def fit(self, X, y):
+        """
+        Fit the algorithm according to the given training data.
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            Training vector, where `n_samples` is the number of samples and
+            `n_features` is the number of features.
+        y : Ignored
+            Not used, present for API consistency by convention.
+
+        Returns
+        -------
+        self
+            Fitted estimator.
+        """
         self.nr_of_samples = X.shape[0]
         self.labels = np.ones(self.nr_of_samples, dtype="int8") * -1
         self.scores = np.zeros(self.nr_of_samples, dtype="float32")
         return self
 
     def predict(self, X, y):
+        """Each Sub-DROP algorithm has to implement their own predict method"""
         raise ValueError("implement in subclass")
 
     def find_neighbors_and_associates(self, X: np.ndarray, invalid_indices: list):
@@ -35,8 +52,9 @@ class DROPSuperClass(BaseEstimator, SelectorMixin):
         A sample "i" is an associate of sample "j" if "j" is in the list of nearest neighbors of "i"
         Parameters
         ----------
-        X
-            array samples x features
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            Training vector, where `n_samples` is the number of samples and
+            `n_features` is the number of features.
         invalid_indices
             indices that should not be included (because they've been filtered before)
         Returns
@@ -61,31 +79,46 @@ class DROPSuperClass(BaseEstimator, SelectorMixin):
                 dict_associates[neighbor].append(i)
         return dict_neighbors, dict_associates
 
-    def prepare_subset_mask(self, X, y):
+    def prepare_subset_mask(self, X, y) -> np.ndarray:
+        """
+        This function is used to apply a instance selection before the main DROP algorithm is run. In the basic
+        version here it just returns boolean indexes that choose every instance
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            Training vector, where `n_samples` is the number of samples and
+            `n_features` is the number of features.
+        y
+            array containing target variable
+        Returns
+        -------
+        array containing a boolean mask indicating which instances to further use
+        """
         return np.ones(self.nr_of_samples, dtype="bool")
 
 
-class DROP2RE(DROPSuperClass):
-    """
-    No sorting , No Noise filter
-    """
+class DROPRE2RE(DROPRESuperClass):
+    """DROP2 algorithm for Regression using the cumulative Error approach"""
 
     def main_re_loop(
         self, X, y, subset_mask, loop_idx, dict_neighbors, dict_associates
-    ):
+    ) -> np.ndarray:
         """
-        This is the main function of those algorithms that use cumulative error as a criteria to decide which samples to
-        include
+        This is the main function of those algorithms that use cumulative error as a criteria to decide which instances
+        to include
 
         The numbers in the comments refer to the pseudo code lines from the DROP for regression paper (Arnaiz, 2016)
+
         Parameters
         ----------
-        X
-            feature array
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            Training vector, where `n_samples` is the number of samples and
+            `n_features` is the number of features.
         y
-            target array
+            array containing target variable
         subset_mask
-            mask to indicate if samples have already been filtered
+            boolean mask to indicate which instances to inspect
         loop_idx
             list of indexes to loop through
         dict_neighbors
@@ -94,7 +127,7 @@ class DROP2RE(DROPSuperClass):
             dict containing the associates for each instance (via index)
         Returns
         -------
-
+        boolean array, True indicating that the instance should be chosen for model training
         """
         for i in loop_idx:  # 5
             error_with = 0  # 6
@@ -129,6 +162,22 @@ class DROP2RE(DROPSuperClass):
         return subset_mask
 
     def predict(self, X, y):
+        """Predict the labels (1 use for training, -1 rejected) of X according to DROP
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            Training vector, where `n_samples` is the number of samples and
+            `n_features` is the number of features.
+        y : array-like of shape (n_samples,)
+            Target vector relative to X.
+
+        Returns
+        -------
+        labels: ndarray of shape (n_samples,)
+            Returns +1 for samples that should be used for model training, -1 for those rejected
+        """
+
         subset_mask = self.prepare_subset_mask(X, y)
         dict_neighbors, dict_associates = self.find_neighbors_and_associates(
             X, []
@@ -145,7 +194,9 @@ class DROP2RE(DROPSuperClass):
         return self.labels
 
 
-class DROP2RT(DROP2RE):
+class DROP2RT(DROPRE2RE):
+    """DROP2 algorithm for Regression using the adaptive Thresholding approach"""
+
     def __init__(self, alpha: float = 0.5, nr_of_neighbors: int = 9, subsize_frac=1):
         super().__init__(
             nr_of_neighbors,
@@ -156,6 +207,31 @@ class DROP2RT(DROP2RE):
     def main_rt_loop(
         self, X, y, sorted_idx, dict_neighbors, dict_associates, subset_mask
     ):
+        """
+        This is the main function of those algorithms
+        that use adaptive thresholding as a criteria to decide which instances to include
+
+        The numbers in the comments refer to the pseudo code lines from the DROP for regression paper (Arnaiz, 2016)
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            Training vector, where `n_samples` is the number of samples and
+            `n_features` is the number of features.
+        y
+            array containing target variable
+        sorted_idx
+            list of indexes to loop through
+        dict_neighbors
+            dict containing the neighbors for each instance (via index)
+        dict_associates
+            dict containing the associates for each instance (via index)
+
+        Returns
+        -------
+        boolean array, True indicating that the instance should be chosen for model training
+        """
+
         for i in sorted_idx:  # 6
             threshold_with = 0
             threshold_without = 0
@@ -194,6 +270,21 @@ class DROP2RT(DROP2RE):
         return subset_mask
 
     def predict(self, X, y):
+        """Predict the labels (1 use for training, -1 rejected) of X according to DROP
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            Training vector, where `n_samples` is the number of samples and
+            `n_features` is the number of features.
+        y : array-like of shape (n_samples,)
+            Target vector relative to X.
+
+        Returns
+        -------
+        labels: ndarray of shape (n_samples,)
+            Returns +1 for samples that should be used for model training, -1 for those rejected
+        """
         subset_mask = self.prepare_subset_mask(X, y)
         invalid_indices = np.argwhere(subset_mask == False).flatten()
         # sort idx, as the order in which the loop runs makes a difference
@@ -216,6 +307,23 @@ class DROP2RT(DROP2RE):
         return self.labels
 
     def get_sorted_idx_by_dist_to_closest_enemy(self, X, y):
+        """Returns a sorted list of indices. Sorted ascendingly by the distance to the closest enemy.
+
+        An enemy of a sample x_i is a sample x_j, where |Y(x_i) - Y(x_j)| > theta
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            Training vector, where `n_samples` is the number of samples and
+            `n_features` is the number of features.
+        y
+            array containing target variable
+
+        Returns
+        -------
+        sorted_idx: ndarray of shape (n_samples,)
+            indices of the samples in X, sorted ascendingly by distance to their closest enemy
+        """
         # enemy is closest sample x_j where |Y(x_i) - Y(x_j)| > theta
         model = train_lr_model(X, y)
         closest_enemy_distances = self.find_dist_to_closest_enemy_for_all_instances(
@@ -225,7 +333,25 @@ class DROP2RT(DROP2RE):
         return sorted_idx
 
     def find_dist_to_closest_enemy_for_all_instances(self, X, y, model):
-        closest_enemy_distance = np.ones(X.shape[0])
+        """
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            Training vector, where `n_samples` is the number of samples and
+            `n_features` is the number of features.
+        y
+            array containing target variable
+        model
+            fitted sklearn regression model
+
+        Returns
+        -------
+        closest_enemy_distances: ndarray of shape (n_samples,)
+            each index contains the distance to the closest enemy
+            for the samples corresponding to the same index in X
+        """
+        closest_enemy_distances = np.ones(X.shape[0])
         theta = self.get_theta(y)
         predictions = model.predict(X)
         for i in range(X.shape[0]):
@@ -235,7 +361,7 @@ class DROP2RT(DROP2RE):
             )
             enemies_idx = np.argwhere(abs_diff_predictions > theta).flatten()
             if len(enemies_idx) == 0:
-                closest_enemy_distance[i] = abs_diff_predictions[
+                closest_enemy_distances[i] = abs_diff_predictions[
                     abs_diff_predictions > 0
                 ].min()
             else:
@@ -243,15 +369,28 @@ class DROP2RT(DROP2RE):
                     X[enemies_idx, :], investigated_instance
                 )
                 lowest_dist_to_enemy = np.min(distances_enemies)
-                closest_enemy_distance[i] = lowest_dist_to_enemy
-        return closest_enemy_distance
+                closest_enemy_distances[i] = lowest_dist_to_enemy
+        return closest_enemy_distances
 
     def get_theta(self, y_sub):
+        """Returns the adaptive threshold :math:`\theta`
+
+        Parameters
+        ----------
+        y_sub
+            subset of the target vector y
+
+        Returns
+        -------
+        theta: np.float
+        """
         theta = self.alpha * np.std(y_sub)
         return theta
 
 
 class DROP3RE(DROP2RT):
+    """DROP3 algorithm for Regression using the cumulative Error approach"""
+
     def __init__(
         self,
         alpha: float = 0.5,
@@ -269,6 +408,21 @@ class DROP3RE(DROP2RT):
         self.reg_enn_neighbors = reg_enn_neighbors
 
     def predict(self, X, y):
+        """Predict the labels (1 use for training, -1 rejected) of X according to DROP
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            Training vector, where `n_samples` is the number of samples and
+            `n_features` is the number of features.
+        y : array-like of shape (n_samples,)
+            Target vector relative to X.
+
+        Returns
+        -------
+        labels: ndarray of shape (n_samples,)
+            Returns +1 for samples that should be used for model training, -1 for those rejected
+        """
         subset_mask = self.prepare_subset_mask(X, y)
         invalid_indices = np.argwhere(subset_mask == False).flatten()
         # sort idx, as the order in which the loop runs makes a difference
@@ -286,6 +440,21 @@ class DROP3RE(DROP2RT):
         return self.labels
 
     def noise_filter(self, X, y):
+        """Predict the labels (1 clean samples, -1 noisy samples) of X according to RegENN
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            Training vector, where `n_samples` is the number of samples and
+            `n_features` is the number of features.
+        y : array-like of shape (n_samples,)
+            Target vector relative to X.
+
+        Returns
+        -------
+        labels: ndarray of shape (n_samples,)
+            Returns +1 for "clean" samples, -1 for noisy samples
+        """
         regenn = RegEnnSelector(
             alpha=self.reg_enn_alpha,
             nr_of_neighbors=self.reg_enn_neighbors,
@@ -295,11 +464,28 @@ class DROP3RE(DROP2RT):
         return transform_selector_output_into_mask(labels)
 
     def prepare_subset_mask(self, X, y):
+        """Returns pre-selection of samples to use for DROP algorithm selection
+
+        Parameters
+        ----------
+         X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            Training vector, where `n_samples` is the number of samples and
+            `n_features` is the number of features.
+        y : array-like of shape (n_samples,)
+            Target vector relative to X.
+
+        Returns
+        -------
+        subset_mask
+            True for samples to inspect in DROP algorith, False for rejected samples
+        """
         subset_mask = self.noise_filter(X, y)
         return subset_mask
 
 
 class DROP3RT(DROP2RT):
+    """DROP3 algorithm for Regression using adaptive Thresholding"""
+
     def __init__(
         self,
         alpha: float = 0.5,
@@ -317,6 +503,21 @@ class DROP3RT(DROP2RT):
         self.reg_enn_neighbors = reg_enn_neighbors
 
     def noise_filter(self, X, y):
+        """Predict the labels (1 clean samples, -1 noisy samples) of X according to RegENN
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            Training vector, where `n_samples` is the number of samples and
+            `n_features` is the number of features.
+        y : array-like of shape (n_samples,)
+            Target vector relative to X.
+
+        Returns
+        -------
+        labels: ndarray of shape (n_samples,)
+            Returns +1 for "clean" samples, -1 for noisy samples
+        """
         regenn = RegEnnSelector(
             alpha=self.reg_enn_alpha,
             nr_of_neighbors=self.reg_enn_neighbors,
@@ -326,5 +527,20 @@ class DROP3RT(DROP2RT):
         return transform_selector_output_into_mask(labels)
 
     def prepare_subset_mask(self, X, y):
+        """Returns pre-selection of samples to use for DROP algorithm selection
+
+        Parameters
+        ----------
+         X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            Training vector, where `n_samples` is the number of samples and
+            `n_features` is the number of features.
+        y : array-like of shape (n_samples,)
+            Target vector relative to X.
+
+        Returns
+        -------
+        subset_mask
+            True for samples to inspect in DROP algorith, False for rejected samples
+        """
         subset_mask = self.noise_filter(X, y)
         return subset_mask

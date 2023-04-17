@@ -1,13 +1,11 @@
 import os
 
-import torch
-from torch.utils.data import Dataset
-
 import numpy as np
 import pandas as pd
-
+import torch
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
+from torch.utils.data import Dataset
 
 
 ## Custom PyTorch Dataset Class wrapper
@@ -149,7 +147,6 @@ def libsvm_file_load(path, dim, save_data=False):
 
 
 def clean_lawschool_full(path):
-
     df = pd.read_csv(path)
     df = df.dropna()
     # remove y from df
@@ -215,7 +212,6 @@ def clean_communities_full(path):
 
 
 def house_price_load(trn_path, tst_path, save_data=False):
-
     train_csv = pd.read_csv(trn_path)
     test_csv = pd.read_csv(tst_path)
 
@@ -316,7 +312,6 @@ def house_price_load(trn_path, tst_path, save_data=False):
 
 
 def community_crime_load(path, dim, save_data=False):
-
     data = []
     target = []
     with open(path) as fp:
@@ -331,7 +326,6 @@ def community_crime_load(path, dim, save_data=False):
             # print(temp)
 
             for i in range(len(temp[:-1])):
-
                 if temp[i] != "?":
                     temp_data[i] = float(temp[i])
 
@@ -351,9 +345,7 @@ def community_crime_load(path, dim, save_data=False):
 
 
 def load_dataset_custom(datadir, dset_name, isnumpy=True):
-
     if dset_name == "Community_Crime":
-
         x_trn, y_trn = clean_communities_full(os.path.join(datadir, "communities.csv"))
 
         if isnumpy:
@@ -365,7 +357,6 @@ def load_dataset_custom(datadir, dset_name, isnumpy=True):
         return fullset, x_trn.shape[1]
 
     elif dset_name == "LawSchool":
-
         x_trn, y_trn = clean_lawschool_full(os.path.join(datadir, "lawschool.csv"))
 
         if isnumpy:
@@ -378,7 +369,6 @@ def load_dataset_custom(datadir, dset_name, isnumpy=True):
 
 
 def load_std_regress_data(datadir, dset_name, isnumpy=True, clean=True):
-
     if dset_name == "cadata":
         trn_file = os.path.join(datadir, "cadata.txt")
         x_trn, y_trn = libsvm_file_load(trn_file, 8)
@@ -409,7 +399,6 @@ def load_std_regress_data(datadir, dset_name, isnumpy=True, clean=True):
         x_trn, y_trn = house_price_load(trn_file, test_file)  # ,x_tst,y_tst
 
     elif dset_name == "synthetic":
-
         data_dims = 30  # 100
         samples = 5000  # 1000000
 
@@ -444,7 +433,6 @@ def load_std_regress_data(datadir, dset_name, isnumpy=True, clean=True):
         )
 
     if not clean:
-
         noise_size = int(len(y_trn) * 0.5)
         noise_indices = np.random.choice(
             np.arange(len(y_trn)), size=noise_size, replace=False

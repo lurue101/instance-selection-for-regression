@@ -1,7 +1,5 @@
-import torch
-
 import numpy as np
-
+import torch
 from sklearn import preprocessing
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
@@ -35,7 +33,6 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 
 def get_slices(data_name, data, labels, device, buckets=None, clean=True):
-
     # data_slices = []
     # abel_slices =[]
 
@@ -60,7 +57,6 @@ def get_slices(data_name, data, labels, device, buckets=None, clean=True):
         total_set = set(list(np.arange(len(data))))
 
         for i in protect_feature:
-
             digit = np.ones(data.shape[0], dtype=np.int8) * (i - 1)
             low = np.min(data[:, i])
             high = np.max(data[:, i])
@@ -74,7 +70,6 @@ def get_slices(data_name, data, labels, device, buckets=None, clean=True):
 
             count = 0
             for cl in classes[:-1]:
-
                 indices = []
                 indices_tst = []
 
@@ -153,7 +148,6 @@ def get_slices(data_name, data, labels, device, buckets=None, clean=True):
         label_left = labels[left]
 
     elif data_name == "OnlineNewsPopularity":
-
         protect_feature = [11, 12, 13, 14, 15, 16]
 
         final_lables = [
@@ -172,7 +166,6 @@ def get_slices(data_name, data, labels, device, buckets=None, clean=True):
         max_times = 0
 
         for pf in protect_feature:
-
             classes, times = np.unique(data[:, pf], return_counts=True)
 
             one_id = (classes == 1.0).nonzero()[0].flatten()[0]
@@ -188,7 +181,6 @@ def get_slices(data_name, data, labels, device, buckets=None, clean=True):
         count = 0
 
         for pf in protect_feature:
-
             if pf == max_id:
                 continue
 
@@ -265,7 +257,6 @@ def get_slices(data_name, data, labels, device, buckets=None, clean=True):
         # preprocessing.normalize(data[left])
 
         for j in range(len(val_data_slices)):
-
             val_data_slices[j] = (
                 torch.from_numpy(sc.transform(val_data_slices[j])).float().to(device)
             )
@@ -293,7 +284,6 @@ def get_slices(data_name, data, labels, device, buckets=None, clean=True):
             )
 
     elif data_name in ["census", "LawSchool", "German_credit", "Community_Crime"]:
-
         if data_name == "census":
             protect_feature = 8  # 9
         elif data_name == "LawSchool":
@@ -315,7 +305,6 @@ def get_slices(data_name, data, labels, device, buckets=None, clean=True):
 
         count = 0
         for cl in classes[:-1]:
-
             indices = []
             indices_tst = []
 
@@ -385,7 +374,6 @@ def get_slices(data_name, data, labels, device, buckets=None, clean=True):
         label_left = labels[left]
 
         if not clean:
-
             noise_size = int(len(label_left) * 0.5)
             noise_indices = np.random.choice(
                 np.arange(len(label_left)), size=noise_size, replace=False

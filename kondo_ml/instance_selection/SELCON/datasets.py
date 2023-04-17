@@ -5,16 +5,14 @@ import subprocess
 import sys
 import time
 
+import numpy as np
 import torch
 
-import numpy as np
-
-from prism_kondo.SELCON.utils.Create_Slices import get_slices
-from prism_kondo.SELCON.utils.custom_dataset import (
-    load_dataset_custom,
-    load_std_regress_data,
-)
-from prism_kondo.SELCON.utils.time_series import load_time_series_data
+from kondo_ml.instance_selection.SELCON.utils.Create_Slices import get_slices
+from kondo_ml.instance_selection.SELCON.utils.custom_dataset import (
+    load_dataset_custom, load_std_regress_data)
+from kondo_ml.instance_selection.SELCON.utils.time_series import \
+    load_time_series_data
 
 torch.manual_seed(42)
 np.random.seed(42)
@@ -55,7 +53,6 @@ def load_def_data(data_name, datadir=".\Dataset", is_time=False, past_length=100
         )
 
     elif data_name in ["Community_Crime", "census", "LawSchool"]:
-
         datadir = datadir + "/" + data_name + "/"
 
         fullset, data_dims = load_dataset_custom(datadir, data_name, True)
@@ -136,7 +133,6 @@ def load_def_data(data_name, datadir=".\Dataset", is_time=False, past_length=100
 
 
 def get_data(x_train, x_val, y_train, y_val):
-
     x_trn, y_trn = torch.from_numpy(x_train).float(), torch.from_numpy(y_train).float()
     x_val, y_val = torch.from_numpy(x_val).float(), torch.from_numpy(y_val).float()
 
