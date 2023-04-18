@@ -7,14 +7,12 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
-from kondo_ml.instance_selection.SELCON.model.LinearRegression import \
-    RegressionNet
-from kondo_ml.instance_selection.SELCON.model.SELCON import \
-    FindSubset_Vect_No_ValLoss as FindSubset_Vect
-from kondo_ml.instance_selection.SELCON.model.SELCON import \
-    FindSubset_Vect_TrnLoss
-from kondo_ml.instance_selection.SELCON.utils.custom_dataset import \
-    CustomDataset
+from kondo_ml.instance_selection.SELCON.model.LinearRegression import RegressionNet
+from kondo_ml.instance_selection.SELCON.model.SELCON import (
+    FindSubset_Vect_No_ValLoss as FindSubset_Vect,
+)
+from kondo_ml.instance_selection.SELCON.model.SELCON import FindSubset_Vect_TrnLoss
+from kondo_ml.instance_selection.SELCON.utils.custom_dataset import CustomDataset
 
 torch.manual_seed(42)
 np.random.seed(42)

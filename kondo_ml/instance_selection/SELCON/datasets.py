@@ -10,9 +10,10 @@ import torch
 
 from kondo_ml.instance_selection.SELCON.utils.Create_Slices import get_slices
 from kondo_ml.instance_selection.SELCON.utils.custom_dataset import (
-    load_dataset_custom, load_std_regress_data)
-from kondo_ml.instance_selection.SELCON.utils.time_series import \
-    load_time_series_data
+    load_dataset_custom,
+    load_std_regress_data,
+)
+from kondo_ml.instance_selection.SELCON.utils.time_series import load_time_series_data
 
 torch.manual_seed(42)
 np.random.seed(42)

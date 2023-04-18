@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kondo_ml"
-version = "0.0.7"
+version = "0.0.10"
 authors = [
   { name="Lukas Rücker", email="ruecker.lukas@gmail.com" },
 ]
 description = "Python package for instance selection algorithms"
 readme = "README.md"
-dependencies = ['numpy','pandas','scikit-learn','torch']
+dependencies = ['numpy','pandas','scikit-learn','torch','mutual_info']
 requires-python = ">=3.7"
 classifiers = [
     "Programming Language :: Python :: 3",

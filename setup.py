@@ -17,7 +17,13 @@ else:
 with open("README.md", "r") as fh:
     long_description = fh.read()
 setuptools.setup(
-    install_requires=["numpy", "pandas", "scikit-learn", "torch"],  # Dependencies
+    install_requires=[
+        "numpy",
+        "pandas",
+        "scikit-learn",
+        "torch",
+        "mutual_info",
+    ],  # Dependencies
     python_requires=">=3.10",  # Minimum Python version
     name="kondo_ml",  # Package name
     version=new_version,  # Version

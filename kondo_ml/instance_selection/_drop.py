@@ -3,7 +3,7 @@ from sklearn.base import BaseEstimator
 from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import NearestNeighbors
 
-from kondo_ml.instance_selection import RegEnnSelector
+import kondo_ml
 from kondo_ml.instance_selection.base import SelectorMixin
 from kondo_ml.utils import train_lr_model, transform_selector_output_into_mask
 
@@ -455,7 +455,7 @@ class DROP3RE(DROP2RT):
         labels: ndarray of shape (n_samples,)
             Returns +1 for "clean" samples, -1 for noisy samples
         """
-        regenn = RegEnnSelector(
+        regenn = kondo_ml.instance_selection.RegEnnSelector(
             alpha=self.reg_enn_alpha,
             nr_of_neighbors=self.reg_enn_neighbors,
             subsize_frac=self.subsize_frac,
@@ -518,7 +518,7 @@ class DROP3RT(DROP2RT):
         labels: ndarray of shape (n_samples,)
             Returns +1 for "clean" samples, -1 for noisy samples
         """
-        regenn = RegEnnSelector(
+        regenn = kondo_ml.instance_selection.RegEnnSelector(
             alpha=self.reg_enn_alpha,
             nr_of_neighbors=self.reg_enn_neighbors,
             subsize_frac=self.subsize_frac,

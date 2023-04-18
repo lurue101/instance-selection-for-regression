@@ -7,8 +7,8 @@ from kondo_ml.utils import train_lr_model
 
 
 class RegCnnSelector(SelectorMixin, BaseEstimator):
-    """Adaption of the Condensed Nearest Neighbor Algorithm by (Hart 1968) for Regression. The adaptation
-    was presented in the following paper: #TODO . The RegCNN algorithm removes instances that are redundant/very
+    """Adaption of the Condensed Nearest Neighbor Algorithm by (Hart 1968) for Regression.
+    The RegCNN algorithm removes instances that are redundant/very
     similar to instances already added to the subset.
     """
 

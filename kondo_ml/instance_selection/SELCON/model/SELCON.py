@@ -5,7 +5,9 @@ import torch
 from torch.utils.data import DataLoader
 
 from kondo_ml.instance_selection.SELCON.utils.custom_dataset import (
-    CustomDataset, CustomDataset_WithId)
+    CustomDataset,
+    CustomDataset_WithId,
+)
 
 
 class FindSubset_Vect_No_ValLoss(object):
